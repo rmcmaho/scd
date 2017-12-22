@@ -6,7 +6,8 @@ deploy:
   provider: lambda
   zip: src/print_records.py
   function_name: print_records
-  handler_name: print_records.lambda_handler
+  module_name: print_records
+  handler_name: lambda_handler
   region: us-east-1
   role: arn:aws:iam::430596093869:role/lambda-dynamodb-execution-role
   runtime: python3.6
