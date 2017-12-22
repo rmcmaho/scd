@@ -1,0 +1,6 @@
+language: python
+before_script:
+  - cd ${TRAVIS_BUILD_DIR}
+  - (mkdir build && cd build && cmake ../src)
+script:
+  - (cd build && make create_zip)
