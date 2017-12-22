@@ -10,3 +10,4 @@ project (scd NONE)
 add_custom_target(create_zip COMMAND
     ${CMAKE_COMMAND} -E tar "cfv" "${CMAKE_CURRENT_BINARY_DIR}/print_records.zip" --format=zip "print_records.py"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+

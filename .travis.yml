@@ -1,6 +1,18 @@
 language: python
 before_script:
-  - cd ${TRAVIS_BUILD_DIR}
-  - (mkdir build && cd build && cmake ../src)
+- cd ${TRAVIS_BUILD_DIR}
+- "(mkdir build && cd build && cmake ../src)"
+deploy:
+  provider: lambda
+  zip: src/print_records.py
+  function_name: print_records
+  handler_name: lambda_handler
+  region: us-east-1
+  role: arn:aws:iam::430596093869:role/lambda-dynamodb-execution-role
+  runtime: python3.6
+  access_key_id:
+    secure: SQIxCKLoaguU7MUrHBQSnjRxCxeNR5lU/vHny9SjEC3mLMe1kCeZbWuPiEJjyA5jE8cawlIiy+lBaya0hylYC93POqTVlNCQTiTnGms38v5bY+WxnhoWHtWUF0R+AWPTX03iSvXhJ5A8lLzZ1cJIboBREVGA0SgRpC56yJFzbnfuVGOGaQ0+IgjSdZ2jKg/8Fi50N4NomIIwN7FF5jPvFbkElyRzx04//QmCJwm76ZT5PeD4t3LQ84j4kEy8ENqsyUHB+qVidb73XPFr+ylitemUOZgGuhaVFOyH0p1On7ARIOYzksWFF/sXsGhwnit6Pmc4aE2YXDRl4FU35m4nDsKusylNbDAsV1bDfHZBovjVLVKmtElsp6+FI+vCJBw/MKRTNI1kHcQc7+uAHHcrTIBv66Ai3M9evXFHTFGR/OHi2uKVK924SUGF74gjhS70egspwz71gQm3/2bxCXaqdFcY0l3/JBt8UJQM9dXro3UQ8hYJFEf3Vi+2hVbu8HIFDV/l36yi5yqFSUOt+hjwU5k3gIzQjQ/kt5UDi9ElDoCgPPW1zJjOSEMyvA69mqiplTygGkkk0EXhQadrJyd96zOiyutgixo6cxzFAv4TK18V8Gf27DevvgUpzzSqwPFyorH3d661fSo6ohTuUjllhBgRZb2CPReePZcb9ZrzFMo=
+  secret_access_key:
+    secure: E3NK2WHmFGPTBpxZBUZKd7baF3qlGNN9OEsogl5oWviwiJY9pYYRQwR83lW8YHC6Aenr8TZBe8lDCU3Hb0Phs1C1/L4yfOKY9lXffFealoek97i04sprAzLH2Mcy9kkFzAvWYDj3pzAJDcNY9GZ76lbF26Wu2UuCw5DFlbe25iMbDzwpCyv6DLt2rr12KrFISDtMjrzYApWeJuaR4441igTedAnNEFzAnjkqb/VEeHxc25mlUdjDRnhzmKzglu7rF0V9lHIRxw1GKxuVG1++gLgspFjj4v7vE9J1Vwq+DBzizsCAnJLzDQwUiK6sOZvPRCeKM+0wDNYCKvh0pYyAfDfaDp1arpoTMqPq+HEwRzC5AUhCAGTooFWuOIl3d7ugozvsEou3AkG/kTIqcBxvJs5mf5/O32piC2Tzo+nrHIsfKHjLNgyTiCG9TlpO+dy7fIFnEgfIAlcVQVnkyPA3EpS7o4qUIQIXUREt7WX0A/TBJmtm7H6hHYaPoHFToQvzVfqWZ6IAgVNTM4HCTibriuz/BQXOmq9TQ7mkS4jFumIMmmtbD+g4pZHbSvjRkyF+zqHFivDCnN1PkBwXbjJAzRfO5mkaT5gqpu2Nry1645+fKLToYm/ZtslIzDnOOtOOPRpxV8FK5YdJtEepfY+JNy86q8m3vgVcyN4BSoHNaEQ=
 script:
-  - (cd build && make create_zip)
+- "(cd build && make create_zip)"
