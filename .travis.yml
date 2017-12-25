@@ -4,7 +4,7 @@ python:
   - "3.5"
 deploy: 
   provider: script
-  script: scripts/deploy_lambda.py
+  script: python3 scripts/deploy_lambda.py
 env:
   matrix:
   - secure: f6SlQxBLwBXiST30/qdmxSkf7zQ5t+M78Nh2ICpUgUn6xJDHeQ87QLZxgGpAbKMsCuaqqtIN+IPJXNZ+lq/IEntofrtOacHoWIs7r2xKo+81QSfZnoC+/qlEPbvufbXrhsK49YpdJ4/Lp74sXLgFofPHtLk2nYjfxF0otmbaVYYAZnHhZ8dKYEFmwpNT/+EM+scTIAbG8ZlZnWMr9P08UAkzybZvBsx7BPnL7xrVe86Dk97IZ16GzAVk5GqwOsmb7HOKehkH2RcEI6uFQfitxAn/fSAvJe46V4Yd2LHhg8LofURNJqRD0UPzDtgm6LjOtfZcR56y2gv+ek7Hzi1dC9HNNPeHxD4sk/hyjV1PbqHB5VMpX1f8VC/1UmfGpeIYHrvzNpzPHD2HNwYVjt+wrV1uynAX7Vp1RIvFHoJfuPQtK40BJCeHCWkwMIdKFaaf/CJ4YnmBDIjT69a1mFql8M7WUwYG3VnIZDwpCkH8OO2vVQqJyt32P/BUSw+m70b4Igy5+HjrN5pRWIgpnMAQMhpKe5R616yOlj+6flBucvbLCqrt6NJ4LpJ5qjfHkdGLNCic0rH4qC7MIdzajT1fKLHHcBwMqymdLaSD3EVna5L/IRWG9Ly8Zw8drqIxA/AlvBOeM5OSziHv8ZvpvPd5oiVwcGGYAQeCjCR7Sx8Zvcc=
