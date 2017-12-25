@@ -1,8 +1,11 @@
 language: python
 python:
-  - '3.5'
+  - '3.6'
+deploy:
+  provider: script
+  script: python3 scripts/deploy_lambda.py
 script:
-  - scripts/deploy_lambda.py
+  - echo 'Nothing to build'
 env:
   global:
   - secure: TDQoGUeIx7s+A+uumg014NkRa56dIRoVLYEAdKTeN0hLAe3J7Mm6EJs3bKhzhxaIsCMT5iYb1o83kzy/Rwgmgcdvia2zW7MSV2dmnRrIl70xrZ0HR1usGcILHRJC5itsCqVrJt3xHOmCmNCqIdoQ+lesiYWNtFiz7ANElIPfquihBnBHDC8YUbhuRmaBIJt/BQyQa9WvTbNWtce6bXN3qRTK/QfRace+aaAWQgP0AtN2pZC8BIrpcGwhAObu3X5lDPxbWrd3iZmzvOqn98UOngVZo6+wKZWtnMiXiz/Nk3MktEhVCK76vgatCuXVwaq8yP3QMLrNEN8sJgSJV9sMZg4bApBu1z/ARerznFZtr7fjRNz9KcFatjiwiT5mAHigIauOwX51Mpqn8PoRMRUnTmjjiO742Iq8ntEVn2QCODpduXRjybSXKUVBFwn+BKe6jqLC/Is6rNyc5dVvfKd1x85VDuYx2ca5RcIN1kDIRGaJVsRArbd5P4hZdbMelLJAktTOVtsPpFupv4XEbh4wonnYr81kptc731vOyPtO+mlONDwyl9lkqmBJ2lw+I01RwrJB6vQ5Nvd8nNY2yI66KvDuPvGYON+ErFcxve+z/EPKKRUh6y7004tu9qEEzG4sfeAa1qdc/vg33wBu4rCHhaXBU3BZYRvDUZ6rNrQ9AqU=

@@ -134,3 +134,5 @@ def main():
         publish_lambda(lambda_client, iam_client, config)
 
 
+main()
+
