@@ -127,7 +127,7 @@ def publish_lambda(lambda_client, iam_client, config):
 
 
 def main():
-    os.makedirs(bin_dir())
+    os.makedirs(bin_dir(), exist_ok=True)
     lambda_client = boto3.client('lambda')
     iam_client = boto3.client('iam')
     for config in lambda_configs():
