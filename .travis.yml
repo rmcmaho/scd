@@ -1,6 +1,3 @@
-language: python
-python:
-  - '3.6'
 before_install:
   - curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
   - sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
@@ -11,11 +8,15 @@ install:
   - pip install awscli
   - sudo apt-get install dotnet-sdk-2.0.2
   - gem install yaml-lint
-script:
-  - aws cloudformation validate-template --template-body file://src/lambda/package.yml
+before_script:
   - yaml-lint src/lambda/package.yml
-  - aws cloudformation package --template-file src/lambda/package.yml --output-template-file serverless-output.yml --s3-bucket scd-code
-  - aws cloudformation deploy --template-file serverless-output.yml --stack-name scd
+  - aws cloudformation validate-template --template-body file://src/lambda/package.yml
+jobs:
+  include:
+    - stage: Build CloudFormation package
+      script: aws cloudformation package --template-file src/lambda/package.yml --output-template-file serverless-output.yml --s3-bucket scd-code
+    - stage: Deploy CloudFormation package
+      script: aws cloudformation deploy --template-file serverless-output.yml --stack-name scd
 env:
   global:
   - AWS_DEFAULT_REGION: us-east-1
