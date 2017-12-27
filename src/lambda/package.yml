@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+    DynamoOverHttpLambda:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: .
+            Handler: dynamo_over_http.handler
+            Runtime: python3.6
+            Policies: AmazonDynamoDBFullAccess
+            Events:
+                HttpPost:
+                    Type: Api
+                    Properties:
+                        Path: '/DynamoDBOperations/DynamoDBManager'
+                        Method: post
+                        RestApiId: !Ref DynamoHttpApi
+    DynamoHttpApi:
+        Type: 'AWS::Serverless::Api'
+        Properties:
+            StageName: Prod
+            DefinitionBody:
+                swagger: '2.0'
+                info:
+                    title: scd
+                paths:
+                    '/DynamoDBOperations/DynamoDBManager':
+                        post:
+                            responses:
+                                '200':
+                                    description: OK
+                                    content:
+                                        'application/json':
+                                            schema: Empty
+                            consumes:
+                            - 'application/json'
+                            produces:
+                            - 'application/json'
+                            x-amazon-apigateway-request-validator: basic
+                            x-amazon-apigateway-integration:
+                                httpMethod: POST
+                                type: aws
+                                uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DynamoOverHttpLambda.Arn}/invocations'
+                                passThroughBehavior: when_no_match
+                                responses:
+                                    default:
+                                        statusCode: '200'
+                                        responseTemplates:
+                                            'application/json': ''
+
+
