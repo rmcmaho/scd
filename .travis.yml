@@ -8,11 +8,14 @@ before_install:
   - sudo apt-get update -q
 install:
   - pip install boto3
+  - pip install awscli
   - sudo apt-get install dotnet-sdk-2.0.2
+  - gem install yaml-lint
 script:
-  - echo 'Nothing to build'
-after_success:
-  - python3 scripts/deploy_lambda.py
+  - aws cloudformation validate-template --template-body file://src/lambda/package.yml
+  - yaml-lint src/lambda/package.yml
+  - aws cloudformation package --template-file src/lambda/package.yml --output-template-file serverless-output.yml --s3-bucket scd-code
+  - aws cloudformation deploy --template-file serverless-output.yml --stack-name scd
 env:
   global:
   - AWS_DEFAULT_REGION: us-east-1
