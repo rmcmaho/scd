@@ -9,7 +9,7 @@ install:
   - gem install yaml-lint
 before_script:
   - mkdir -p ~/shared
-  - aws s3 sync s3://travis-build-stages-shared-storage/shared ~/shared
+  - aws s3 sync s3://travis-build-stage-shared-storage/shared ~/shared
 jobs:
   include:
     - stage: Validate yaml
