@@ -8,14 +8,22 @@ install:
   - sudo apt-get install dotnet-sdk-2.0.2
   - gem install yaml-lint
 before_script:
-  - yaml-lint src/lambda/package.yml
-  - aws cloudformation validate-template --template-body file://src/lambda/package.yml
+  - mkdir -p ~/shared
+  - aws s3 sync s3://travis-build-stages-shared-storage/shared ~/shared
 jobs:
   include:
-    - stage: Build CloudFormation package
-      script: aws cloudformation package --template-file src/lambda/package.yml --output-template-file serverless-output.yml --s3-bucket scd-code
-    - stage: Deploy CloudFormation package
-      script: aws cloudformation deploy --template-file serverless-output.yml --stack-name scd
+    - stage: Validate yaml
+      script:
+      - yaml-lint src/lambda/package.yml
+      - aws cloudformation validate-template --template-body file://src/lambda/package.yml
+    - stage: Build package
+      script:
+      - aws cloudformation package --template-file src/lambda/package.yml --output-template-file ~/shared/serverless-output.yml --s3-bucket scd-code
+    - stage: Deploy package
+      script:
+      - aws cloudformation deploy --template-file ~/shared/serverless-output.yml --stack-name scd
+after_success:
+  - aws s3 sync ~/shared s3://travis-build-stage-shared-storage/shared
 env:
   global:
   - AWS_DEFAULT_REGION: us-east-1
