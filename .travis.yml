@@ -12,6 +12,7 @@ before_script:
 jobs:
   include:
     - stage: Run tests
+      script:
       - pytest src/python
     - stage: Validate yaml
       script:
