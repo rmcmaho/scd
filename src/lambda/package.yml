@@ -4,7 +4,6 @@ Resources:
     DynamoOverHttpLambda:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: .
             Handler: dynamo_over_http.handler
             Runtime: python3.6
             Policies: AmazonDynamoDBFullAccess
@@ -47,5 +46,68 @@ Resources:
                                         statusCode: '200'
                                         responseTemplates:
                                             'application/json': ''
+    StellarSectorsTable:
+        Type: "AWS::DynamoDB::Table"
+        Properties:
+            AttributeDefinitions:
+                -
+                  AttributeName: sector_group
+                  AttributeType: S
+                -
+                  AttributeName: sector_id
+                  AttributeType: S
+            KeySchema:
+                -
+                  AttributeName: sector_group
+                  KeyType: HASH
+                -
+                  AttributeName: sector_id
+                  KeyType: RANGE
+            ProvisionedThroughput:
+                ReadCapacityUnits: 1
+                WriteCapacityUnits: 1
+            TableName: stellar_sectors
+    StellarSystemsTable:
+        Type: "AWS::DynamoDB::Table"
+        Properties:
+            AttributeDefinitions:
+                -
+                  AttributeName: sector_id
+                  AttributeType: S
+                -
+                  AttributeName: system_name
+                  AttributeType: S
+            KeySchema:
+                -
+                  AttributeName: sector_id
+                  KeyType: HASH
+                -
+                  AttributeName: system_name
+                  KeyType: RANGE
+            ProvisionedThroughput:
+                ReadCapacityUnits: 1
+                WriteCapacityUnits: 1
+            TableName: stellar_systems
+    SystemSearchesTable:
+        Type: "AWS::DynamoDB::Table"
+        Properties:
+            AttributeDefinitions:
+                -
+                  AttributeName: system_prefix
+                  AttributeType: S
+                -
+                  AttributeName: system_name
+                  AttributeType: S
+            KeySchema:
+                -
+                  AttributeName: system_prefix
+                  KeyType: HASH
+                -
+                  AttributeName: system_name
+                  KeyType: RANGE
+            ProvisionedThroughput:
+                ReadCapacityUnits: 1
+                WriteCapacityUnits: 1
+            TableName: system_searches
 
 
