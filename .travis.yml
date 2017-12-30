@@ -23,10 +23,10 @@ jobs:
       - aws cloudformation validate-template --template-body file://src/lambda/package.yml
     - stage: Build package
       script:
-      - aws cloudformation package --template-file src/lambda/package.yml --output-template-file ~/shared/serverless-output.yml --s3-bucket scd-code
+      - scripts/create_stack_package.sh
     - stage: Deploy package
       script:
-      - aws cloudformation deploy --template-file ~/shared/serverless-output.yml --stack-name scd --capabilities CAPABILITY_IAM
+      - aws cloudformation deploy --template-file ~/shared/stellar_stack.yml --stack-name scd --capabilities CAPABILITY_IAM
 after_success:
   - aws s3 sync ~/shared s3://travis-build-stage-shared-storage/shared
 env:

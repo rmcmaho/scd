@@ -4,6 +4,7 @@ Resources:
     DynamoOverHttpLambda:
         Type: AWS::Serverless::Function
         Properties:
+            CodeUri: python
             Handler: dynamo_over_http.handler
             Runtime: python3.6
             Policies: AmazonDynamoDBFullAccess
