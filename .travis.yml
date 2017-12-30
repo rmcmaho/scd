@@ -19,7 +19,7 @@ jobs:
       - pytest src/python
     - stage: Validate yaml
       script:
-      - yaml-lint src/lambda/package.yml
+      - yaml-lint config/stellar_stack.yml
       - aws cloudformation validate-template --template-body file://config/stellar_stack.yml
     - stage: Build package
       script:
