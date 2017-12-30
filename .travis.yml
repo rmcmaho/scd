@@ -2,7 +2,7 @@ sudo: false
 dist: trusty
 language: python
 python:
-  - 3.6
+  - 3.5
 cache:
   - pip
   - bundler
@@ -20,7 +20,7 @@ jobs:
     - stage: Validate yaml
       script:
       - yaml-lint src/lambda/package.yml
-      - aws cloudformation validate-template --template-body file://src/lambda/package.yml
+      - aws cloudformation validate-template --template-body file://config/stellar_stack.yml
     - stage: Build package
       script:
       - scripts/create_stack_package.sh
