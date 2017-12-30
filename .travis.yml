@@ -3,6 +3,9 @@ dist: trusty
 language: python
 python:
   - 3.6
+cache:
+  - pip
+  - bundler
 install:
   - pip install -r pip_requirements.txt
   - gem install yaml-lint
