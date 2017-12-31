@@ -111,4 +111,49 @@ Resources:
                 WriteCapacityUnits: 1
             TableName: system_searches
 
-
+    StellarAPILambda:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: python
+            Handler: stellar_code_function.handler
+            Runtime: python3.6
+            Policies: AmazonDynamoDBFullAccess
+            Events:
+                HttpPost:
+                    Type: Api
+                    Properties:
+                        Path: '/stellar/code'
+                        Method: post
+                        RestApiId: !Ref StellarHttpApi
+    StellarHttpApi:
+        Type: 'AWS::Serverless::Api'
+        Properties:
+            StageName: Prod
+            DefinitionBody:
+                swagger: '2.0'
+                info:
+                    title: scd
+                paths:
+                    '/stellar/code':
+                        post:
+                            responses:
+                                '200':
+                                    description: OK
+                                    content:
+                                        'application/json':
+                                            schema: Empty
+                            consumes:
+                            - 'application/json'
+                            produces:
+                            - 'application/json'
+                            x-amazon-apigateway-request-validator: basic
+                            x-amazon-apigateway-integration:
+                                httpMethod: POST
+                                type: aws
+                                uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StellarAPILambda.Arn}/invocations'
+                                passThroughBehavior: when_no_match
+                                responses:
+                                    default:
+                                        statusCode: '200'
+                                        responseTemplates:
+                                            'application/json': ''
