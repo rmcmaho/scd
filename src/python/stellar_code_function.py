@@ -53,8 +53,8 @@ def handler(event, context):
 
     print("Received event: " + json.dumps(event, indent=2))
 
-    operation = route_event(context.resourcePath, context.httpMethod)
-    response = operation(boto3.resource('dynamodb'), event)
+    operation = route_event(event['resource'], event['httpMethod'])
+    response = operation(boto3.resource('dynamodb'), event['body'])
     
     print("Response: " + response)
     return response

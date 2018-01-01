@@ -149,7 +149,7 @@ Resources:
                             x-amazon-apigateway-request-validator: basic
                             x-amazon-apigateway-integration:
                                 httpMethod: POST
-                                type: aws
+                                type: AWS_PROXY
                                 uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StellarAPILambda.Arn}/invocations'
                                 passThroughBehavior: when_no_match
                                 responses:
