@@ -7,7 +7,7 @@ import boto3
 import stellar_code.stellar_code as stellar_code
 
 
-TABLE_STELLAR_SYSTEM_ = 'stellar_systems'
+TABLE_STELLAR_SYSTEMS_ = 'stellar_systems'
 TABLE_STELLAR_SECTORS_ = 'stellar_sectors'
 TABLE_SYSTEM_SEARCHES_ = 'system_searches'
 
