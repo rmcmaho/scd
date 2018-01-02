@@ -22,16 +22,17 @@ def generate_system_name(req):
     return 'HYG ' + req['hyg']
 
 
-def insert_stellar_system(db_client, req_json):
-    request = json.loads(req_json)
+def insert_stellar_system(db_client, request):
     sector_id = stellar_code.encode_equitorial(request['ra'], request['dec'], request['dist'])
     system_name = generate_system_name(request)
     item = {        
-        'sector_id': sector_id,
-        'system_name': system_name
+        'sector_id': {'S': sector_id},
+        'system_name': {'S': system_name}
     }
-    table_client = db_client.Table(TABLE_STELLAR_SYSTEMS_)
-    return table_client.put_item(Item=item)
+    return db_client.put_item(
+            TableName=TABLE_STELLAR_SYSTEMS_,
+            Item=item,
+            ReturnConsumedCapacity='TOTAL')
 
 
 def route_event(resource_path, http_method):
@@ -54,10 +55,11 @@ def handler(event, context):
     print("Received event: " + json.dumps(event, indent=2))
 
     operation = route_event(event['resource'], event['httpMethod'])
-    response = operation(boto3.resource('dynamodb'), event['body'])
+    response = operation(boto3.client('dynamodb'), json.loads(event['body']))
     
-    print("Response: " + response)
-    return response
+    response_json = json.dumps(response, indent=2)
+    print("Response: " + response_json)
+    return response_json
     
     
 
