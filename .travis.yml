@@ -7,7 +7,7 @@ cache:
   - pip
   - bundler
 install:
-  - pip install --compile -r pip_requirements.txt
+  - pip install -r pip_requirements.txt
   - gem install yaml-lint
 before_script:
   - mkdir -p ~/shared
