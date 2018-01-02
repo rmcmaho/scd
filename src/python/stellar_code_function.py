@@ -56,10 +56,15 @@ def handler(event, context):
 
     operation = route_event(event['resource'], event['httpMethod'])
     response = operation(boto3.client('dynamodb'), json.loads(event['body']))
-    
     response_json = json.dumps(response, indent=2)
+
     print("Response: " + response_json)
-    return response_json
+    return {
+        'statusCode': 200,
+        'headers': {},
+        'isBase64Encoded': False,
+        'body': response_json
+    }
     
     
 

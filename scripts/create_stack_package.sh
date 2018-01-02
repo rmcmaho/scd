@@ -21,8 +21,8 @@ SHARED_DIR="$HOME/shared"
 mkdir -p $BUILD_DIR
 mkdir -p $SHARED_DIR
 
-rsync -a $SRC_DIR/python/ $BUILD_DIR/python
-rsync -a $VIRTUAL_ENV/lib/$PYTHON_DIST/site-packages/ $BUILD_DIR/python
+rsync -a --exclude-from $SCRIPT_DIR/rsync_excludes.txt $SRC_DIR/python/ $BUILD_DIR/python
+rsync -a --exclude-from $SCRIPT_DIR/rsync_excludes.txt $VIRTUAL_ENV/lib/$PYTHON_DIST/site-packages/ $BUILD_DIR/python
 rsync -a $CONFIG_DIR/stellar_stack.yml $BUILD_DIR/stellar_stack.yml
 
 aws cloudformation package --template-file $BUILD_DIR/stellar_stack.yml --output-template-file $SHARED_DIR/stellar_stack.yml --s3-bucket scd-code

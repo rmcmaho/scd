@@ -142,6 +142,11 @@ Resources:
                                     content:
                                         'application/json':
                                             schema: Empty
+                                '500':
+                                    description: LAMBDA ERROR
+                                    content:
+                                        'application/json':
+                                            schema: Empty
                             consumes:
                             - 'application/json'
                             produces:
@@ -157,3 +162,6 @@ Resources:
                                         statusCode: '200'
                                         responseTemplates:
                                             'application/json': ''
+                                    'errorType':
+                                        statusCode: '500'
+
