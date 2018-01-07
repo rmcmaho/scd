@@ -1,0 +1,37 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+    EnvType:
+        Description: Environment type.
+        Default: test
+        Type: String
+        AllowedValues:
+            - test
+            - prod
+        ConstraintDescription: must specify test or prod.
+Resources:
+    ConfigS3Bucket:
+        Type: "AWS::S3::Bucket"
+        DeletionPolicy: Delete
+        Properties:
+            BucketName: !Sub "${AWS::StackName}-${AWS::Region}-${EnvType}"
+            VersioningConfiguration:
+                Status: Enabled
+Outputs:
+    ConfigS3BucketName:
+        Value: !Ref ConfigS3Bucket
+        Export:
+            Name: !Sub "${AWS::StackName}-S3BucketName"
+    ConfigS3BucketURL:
+        Value: !GetAtt ConfigS3Bucket.WebsiteURL
+        Export:
+            Name: !Sub "${AWS::StackName}-S3BucketURL"
+    StellarTemplateURL:
+        Value: !Sub "https://s3.amazonaws.com/${ConfigS3Bucket}/stellar_api.yml"
+        Export:
+            Name: !Sub "${AWS::StackName}-StellarTemplateURL"
+    IAMTemplateURL:
+        Value: !Sub "https://s3.amazonaws.com/${ConfigS3Bucket}/users_and_roles.yml"
+        Export:
+            Name: !Sub "${AWS::StackName}-IAMTemplateURL"
+

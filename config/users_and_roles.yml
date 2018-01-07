@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+    EnvType:
+        Description: Environment type.
+        ConstraintDescription: must specify setup, test, or prod.
+    CodeS3BucketArn:
+        Type: String
+        Description: ARN of S3 bucket to store code.
+    ConfigS3BucketArn:
+        Type: String
+        Description: ARN of S3 bucket to store config.
+    StellarApiArn:
+        Type: String
+        Description: ARN of API Gateway.
+Resources:
+    UpdateStellarStackPolicy:
+        Type: "AWS::IAM::Policy"
+        Properties:
+            PolicyName: "UpdateStellarStack"
+            PolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                  - Sid: StellarLambda
+                    Effect: Allow
+                    Action:
+                        - "lambda:GetFunctionConfiguration"
+                        - "lambda:UpdateFunctionConfiguration"
+                        - "lambda:UpdateFunctionCode"
+                    Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:scd-*"
+                  - Sid: StellarS3
+                    Effect: Allow
+                        - "s3:ListBucket"
+                        - "s3:ListObjects"
+                        - "s3:GetObject"
+                    Resource:
+                        - !Ref CodeS3BucketArn
+                        - !Sub "${CodeS3BucketArn}/*"
+                        - !Ref ConfigS3BucketArn
+                        - !Sub "${ConfigS3BucketArn}/*"
+                  - Sid: StellarCloudFormation
+                    Effect: Allow
+                        - "cloudformation:CreateChangeSet"
+                        - "cloudformation:DescribeChangeSet"
+                        - "cloudformation:ValidateTemplate"
+                        - "cloudformation:DescribeStacks"
+                        - "cloudformation:ExecuteChangeSet"
+                    Resource:
+                        - "arn:aws:cloudformation:${AWS::Region}:aws:transform/Serverless-2016-10-31"
+                        - !Ref AWS::StackId
+                  - Sid: StellarIAM
+                    Effect: Allow
+                        - "iam:GetRole"
+                    Resource: "*"
+                  - Sid: StellarApiGateway
+                    Effect: Allow
+                        - "apigateway:PATCH"
+                        - "apigateway:POST"
+                        - "apigateway:GET"
+                    Resource: !Ref StellarApiArn
+
+

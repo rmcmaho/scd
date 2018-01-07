@@ -1,0 +1,26 @@
+Parameters: 
+    EnvType:
+        Description: "Environment type."
+        Default: test
+        Type: String
+        AllowedValues:
+            - test
+            - prod
+        ConstraintDescription: "must specify test or prod."
+    ConfigStackName:
+        Description: "Name of config stack."
+        Default: scd-config
+        Type: String
+Resources:
+    StellarApi:
+        Type: "AWS::CloudFormation::Stack"
+        Properties:
+            TemplateURL:
+                Fn::ImportValue: !Sub "${ConfigStackName}-StellarTemplateURL"
+            Parameters:
+                EnvType: !Ref EnvType
+    UsersAndRoles:
+        Type: "AWS::CloudFormation::Stack"
+        Properties:
+            TemplateURL:
+                Fn::ImportValue: !Sub "${ConfigStackName}-IAMTemplateURL"
