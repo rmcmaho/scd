@@ -18,9 +18,16 @@ Resources:
             TemplateURL:
                 Fn::ImportValue: !Sub "${ConfigStackName}-StellarTemplateURL"
             Parameters:
-                EnvType: !Ref EnvType
+                CodeS3BucketName: !Sub "${ConfigStackName}-S3BucketName"
     UsersAndRoles:
         Type: "AWS::CloudFormation::Stack"
         Properties:
             TemplateURL:
                 Fn::ImportValue: !Sub "${ConfigStackName}-IAMTemplateURL"
+            Parameters:
+                EnvType: !Ref EnvType
+                CodeS3BucketArn: !GetAtt StellarApi.Outputs.CodeS3BucketArn
+                StellarLambdaApiArn: !GetAtt StellarApi.Outputs.StellarLambdaApiArn
+                StellarHttpApiArn: !GetAtt StellarApi.Outputs.StellarHttpApiArn
+                ConfigS3BucketArn:
+                    Fn::ImportValue: !Sub "${ConfigStackName}-S3BucketArn" 

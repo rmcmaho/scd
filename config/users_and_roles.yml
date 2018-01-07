@@ -1,6 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
     EnvType:
+        Type: String
         Description: Environment type.
         ConstraintDescription: must specify setup, test, or prod.
     CodeS3BucketArn:
@@ -9,9 +10,12 @@ Parameters:
     ConfigS3BucketArn:
         Type: String
         Description: ARN of S3 bucket to store config.
-    StellarApiArn:
+    StellarHttpApiArn:
         Type: String
         Description: ARN of API Gateway.
+    StellarLambdaApiArn:
+        Type: String
+        Description: ARN of Lambda.
 Resources:
     UpdateStellarStackPolicy:
         Type: "AWS::IAM::Policy"
@@ -26,7 +30,7 @@ Resources:
                         - "lambda:GetFunctionConfiguration"
                         - "lambda:UpdateFunctionConfiguration"
                         - "lambda:UpdateFunctionCode"
-                    Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:scd-*"
+                    Resource: !Sub StellarLambdaApiArn
                   - Sid: StellarS3
                     Effect: Allow
                         - "s3:ListBucket"
@@ -45,7 +49,6 @@ Resources:
                         - "cloudformation:DescribeStacks"
                         - "cloudformation:ExecuteChangeSet"
                     Resource:
-                        - "arn:aws:cloudformation:${AWS::Region}:aws:transform/Serverless-2016-10-31"
                         - !Ref AWS::StackId
                   - Sid: StellarIAM
                     Effect: Allow
@@ -56,6 +59,6 @@ Resources:
                         - "apigateway:PATCH"
                         - "apigateway:POST"
                         - "apigateway:GET"
-                    Resource: !Ref StellarApiArn
+                    Resource: !Ref StellarHttpApiArn
 
 

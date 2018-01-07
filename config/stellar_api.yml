@@ -1,21 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
 Parameters:
-    ScdCodeBucketName:
+    CodeS3BucketName:
         Type: String
-        Description: Name of S3 bucket to store code.
-    PythonLambdaPackage:
-        Type: String
-        Default: stellar_api.zip
-        Description: Name of python lambda code package.
+        Description: Name of bucket containing lambda code packages.
 Resources:
-    CodeS3Bucket:
-        Type: "AWS::S3::Bucket"
-        DeletionPolicy: Retain
-        Properties:
-            BucketName: !Ref ScdCodeBucketName
-            VersioningConfiguration:
-                Status: Enabled
     StellarSectorsTable:
         Type: "AWS::DynamoDB::Table"
         Properties:
@@ -79,57 +67,76 @@ Resources:
                 ReadCapacityUnits: 1
                 WriteCapacityUnits: 1
             TableName: system_searches
-
-    StellarAPILambda:
-        Type: AWS::Serverless::Function
+    StellarLambdaApi:
+        Type: AWS::Lambda::Function
         Properties:
-            CodeUri:
-                Bucket: !Ref ScdCodeBucketName
-                Key: !Ref PythonLambdaPackage
+            Code:
+                S3Bucket: !Ref CodeS3BucketName
+                S3Key: lambda_package.zip
             Handler: stellar_code_function.handler
             Runtime: python3.6
-            Policies: AmazonDynamoDBFullAccess
-            Events:
-                HttpPost:
-                    Type: Api
-                    Properties:
-                        Path: '/stellar/code'
-                        Method: post
-                        RestApiId: !Ref StellarHttpApi
-    StellarHttpApi:
-        Type: 'AWS::Serverless::Api'
+            Role: !GetAtt StellarLambdaRole.Arn
+    StellarLambdaRole:
+        Type: AWS::IAM::Role
         Properties:
-            StageName: Prod
-            DefinitionBody:
-                swagger: '2.0'
-                info:
-                    title: scd
-                paths:
-                    '/stellar/code':
-                        post:
-                            responses:
-                                '200':
-                                    description: OK
-                                    content:
-                                        'application/json':
-                                            schema: Empty
-                            consumes:
-                            - 'application/json'
-                            produces:
-                            - 'application/json'
-                            x-amazon-apigateway-request-validator: basic
-                            x-amazon-apigateway-integration:
-                                httpMethod: POST
-                                type: AWS_PROXY
-                                uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StellarAPILambda.Arn}/invocations'
-                                passThroughBehavior: when_no_match
+            AssumeRolePolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                           Service: lambda.amazonaws.com
+                      Action: sts:AssumeRole
+            ManagedPolicyArns:
+                - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+                - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+                - arn:aws:iam::aws:policy/CloudWatchFullAccess
+    StellarLambdaRolePermission:
+        Type: AWS::Lambda::Permission
+        Properties:
+            FunctionName: !Ref StellarLambdaApi
+            Action: lambda:InvokeFunction
+            Principal: apigateway.amazonaws.com
+            SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${StellarHttpApi}/*"
+    StellarHttpApi:
+        Type: 'AWS::ApiGateway::RestApi'
+        Properties:
+            Name: "Stellar HTTP API"
+            Description: "API for interacting with stellar systems."
+            FailOnWarnings: True
+            Body:
+                StageName: Prod
+                DefinitionBody:
+                    swagger: '2.0'
+                    info:
+                        title: scd
+                    paths:
+                        '/stellar/code':
+                            post:
                                 responses:
-                                    default:
-                                        statusCode: '200'
-                                        responseTemplates:
-                                            'application/json': ''
+                                    '200':
+                                        description: OK
+                                        content:
+                                            'application/json':
+                                                schema: Empty
+                                consumes:
+                                - 'application/json'
+                                produces:
+                                - 'application/json'
+                                x-amazon-apigateway-request-validator: basic
+                                x-amazon-apigateway-integration:
+                                    httpMethod: POST
+                                    type: AWS_PROXY
+                                    uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StellarLambdaApi.Arn}/invocations'
+                                    passThroughBehavior: when_no_match
+                                    responses:
+                                        default:
+                                            statusCode: '200'
+                                            responseTemplates:
+                                                'application/json': ''
 Outputs:
     CodeS3BucketArn:
-        Value: !Ref CodeS3Bucket.Arn
-    StellarApiArn:
-        Value: !Ref StellarHttpApi.Arn
+        Value: !GetAtt CodeS3Bucket.Arn
+    StellarLambdaApiArn:
+        Value: !GetAtt StellarLambdaApi.Arn
+    StellarHttpApiArn:
+        Value: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${StellarHttpApi.RootResourceId}*"

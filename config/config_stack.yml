@@ -26,6 +26,10 @@ Outputs:
         Value: !GetAtt ConfigS3Bucket.WebsiteURL
         Export:
             Name: !Sub "${AWS::StackName}-S3BucketURL"
+    ConfigS3BucketArn:
+        Value: !GetAtt ConfigS3Bucket.Arn
+        Export:
+            Name: !Sub "${AWS::StackName}-S3BucketArn"
     StellarTemplateURL:
         Value: !Sub "https://s3.amazonaws.com/${ConfigS3Bucket}/stellar_api.yml"
         Export:
