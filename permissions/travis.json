@@ -5,7 +5,6 @@
             "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": [
-                "lambda:CreateFunction",
                 "iam:GetRole",
                 "lambda:UpdateFunctionConfiguration",
                 "cloudformation:CreateChangeSet",
@@ -19,22 +18,15 @@
             "Sid": "VisualEditor1",
             "Effect": "Allow",
             "Action": [
-                "iam:CreateRole",
-                "iam:DeleteRole",
                 "s3:ListBucket",
-                "iam:AttachRolePolicy",
                 "cloudformation:DescribeStacks",
-                "s3:PutObject",
                 "s3:GetObject",
-                "apigateway:DELETE",
                 "iam:PassRole",
-                "lambda:AddPermission",
                 "iam:DetachRolePolicy",
                 "apigateway:PATCH",
                 "apigateway:POST",
                 "apigateway:GET",
-                "cloudformation:ExecuteChangeSet",
-                "lambda:RemovePermission"
+                "cloudformation:ExecuteChangeSet"
             ],
             "Resource": [
                 "arn:aws:cloudformation:*:*:stack/scd/*",
@@ -43,8 +35,7 @@
                 "arn:aws:s3:::travis-build-stage-shared-storage",
                 "arn:aws:s3:::scd-code/*",
                 "arn:aws:s3:::travis-build-stage-shared-storage/*",
-                "arn:aws:apigateway:us-east-1::/restapis*",
-                "arn:aws:iam::*:role/scd-DynamoOverHttp*"
+                "arn:aws:apigateway:us-east-1::/restapis*"
             ]
         },
         {
@@ -52,8 +43,7 @@
             "Effect": "Allow",
             "Action": [
                 "lambda:UpdateFunctionCode",
-                "lambda:GetFunctionConfiguration",
-                "lambda:DeleteFunction"
+                "lambda:GetFunctionConfiguration"
             ],
             "Resource": "arn:aws:lambda:us-east-1:*:function:scd-*"
         }

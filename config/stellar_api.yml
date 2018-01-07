@@ -1,52 +1,21 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
+Parameters:
+    ScdCodeBucketName:
+        Type: String
+        Description: Name of S3 bucket to store code.
+    PythonLambdaPackage:
+        Type: String
+        Default: stellar_api.zip
+        Description: Name of python lambda code package.
 Resources:
-    DynamoOverHttpLambda:
-        Type: AWS::Serverless::Function
+    CodeS3Bucket:
+        Type: "AWS::S3::Bucket"
+        DeletionPolicy: Retain
         Properties:
-            CodeUri: python
-            Handler: dynamo_over_http.handler
-            Runtime: python3.6
-            Policies: AmazonDynamoDBFullAccess
-            Events:
-                HttpPost:
-                    Type: Api
-                    Properties:
-                        Path: '/DynamoDBOperations/DynamoDBManager'
-                        Method: post
-                        RestApiId: !Ref DynamoHttpApi
-    DynamoHttpApi:
-        Type: 'AWS::Serverless::Api'
-        Properties:
-            StageName: Prod
-            DefinitionBody:
-                swagger: '2.0'
-                info:
-                    title: scd
-                paths:
-                    '/DynamoDBOperations/DynamoDBManager':
-                        post:
-                            responses:
-                                '200':
-                                    description: OK
-                                    content:
-                                        'application/json':
-                                            schema: Empty
-                            consumes:
-                            - 'application/json'
-                            produces:
-                            - 'application/json'
-                            x-amazon-apigateway-request-validator: basic
-                            x-amazon-apigateway-integration:
-                                httpMethod: POST
-                                type: aws
-                                uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DynamoOverHttpLambda.Arn}/invocations'
-                                passThroughBehavior: when_no_match
-                                responses:
-                                    default:
-                                        statusCode: '200'
-                                        responseTemplates:
-                                            'application/json': ''
+            BucketName: !Ref ScdCodeBucketName
+            VersioningConfiguration:
+                Status: Enabled
     StellarSectorsTable:
         Type: "AWS::DynamoDB::Table"
         Properties:
@@ -114,7 +83,9 @@ Resources:
     StellarAPILambda:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: python
+            CodeUri:
+                Bucket: !Ref ScdCodeBucketName
+                Key: !Ref PythonLambdaPackage
             Handler: stellar_code_function.handler
             Runtime: python3.6
             Policies: AmazonDynamoDBFullAccess
@@ -157,3 +128,8 @@ Resources:
                                         statusCode: '200'
                                         responseTemplates:
                                             'application/json': ''
+Outputs:
+    CodeS3BucketArn:
+        Value: !Ref CodeS3Bucket.Arn
+    StellarApiArn:
+        Value: !Ref StellarHttpApi.Arn
