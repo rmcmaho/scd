@@ -21,11 +21,11 @@ jobs:
       script:
       - yaml-lint config/config_stack.yml
       - yaml-lint config/root_stack.yml
-      - yaml-lint config/stellar_stack.yml
+      - yaml-lint config/stellar_api.yml
       - yaml-lint config/users_and_roles.yml
       - aws cloudformation validate-template --template-body file://config/config_stack.yml
       - aws cloudformation validate-template --template-body file://config/root_stack.yml
-      - aws cloudformation validate-template --template-body file://config/stellar_stack.yml
+      - aws cloudformation validate-template --template-body file://config/stellar_api.yml
       - aws cloudformation validate-template --template-body file://config/users_and_roles.yml
     - stage: Update stack
       script:

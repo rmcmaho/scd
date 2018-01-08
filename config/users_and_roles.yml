@@ -23,15 +23,13 @@ Resources:
             PolicyDocument:
                 Version: "2012-10-17"
                 Statement:
-                  - Sid: StellarLambda
-                    Effect: Allow
+                  - Effect: Allow
                     Action:
                         - "lambda:GetFunctionConfiguration"
                         - "lambda:UpdateFunctionConfiguration"
                         - "lambda:UpdateFunctionCode"
                     Resource: !Ref StellarLambdaApiArn
-                  - Sid: GeneralS3
-                    Effect: Allow
+                  - Effect: Allow
                     Action:
                         - "s3:ListBucket"
                         - "s3:ListObjects"
@@ -42,29 +40,29 @@ Resources:
                         - !Sub "${ConfigS3BucketArn}/*"
                         - arn:aws:s3:::travis-build-stage-shared-storage
                         - arn:aws:s3:::travis-build-stage-shared-storage/*
-                  - Sid: TravisS3
-                    Effect: Allow
+                  - Effect: Allow
                     Action:
                         - "s3:DeleteObject"
                     Resource:
                         - arn:aws:s3:::travis-build-stage-shared-storage/shared/*
-                  - Sid: StellarCloudFormation
-                    Effect: Allow
+                  - Effect: Allow
                     Action:
                         - "cloudformation:CreateChangeSet"
-                        - "cloudformation:DescribeChangeSet"
-                        - "cloudformation:ValidateTemplate"
                         - "cloudformation:DescribeStacks"
                         - "cloudformation:ExecuteChangeSet"
                     Resource:
-                        - !Ref AWS::StackId
-                  - Sid: StellarIAM
-                    Effect: Allow
+                        - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
+                  - Effect: Allow
+                    Action:
+                        - "cloudformation:DescribeChangeSet"
+                        - "cloudformation:ValidateTemplate"
+                    Resource:
+                        - "*"
+                  - Effect: Allow
                     Action:
                         - "iam:GetRole"
                     Resource: "*"
-                  - Sid: StellarApiGateway
-                    Effect: Allow
+                  - Effect: Allow
                     Action:
                         - "apigateway:PATCH"
                         - "apigateway:POST"
