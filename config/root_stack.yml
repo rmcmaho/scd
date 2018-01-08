@@ -26,7 +26,8 @@ Resources:
                 Fn::ImportValue: !Sub "${ConfigStackName}-IAMTemplateURL"
             Parameters:
                 EnvType: !Ref EnvType
-                CodeS3BucketArn: !GetAtt StellarApi.Outputs.CodeS3BucketArn
+                CodeS3BucketArn:
+                    Fn::ImportValue: !Sub "${ConfigStackName}-S3BucketArn" 
                 StellarLambdaApiArn: !GetAtt StellarApi.Outputs.StellarLambdaApiArn
                 StellarHttpApiArn: !GetAtt StellarApi.Outputs.StellarHttpApiArn
                 ConfigS3BucketArn:

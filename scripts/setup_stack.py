@@ -2,7 +2,10 @@
 import datetime
 import json
 import os
+import re
+import sys
 import time
+import zipfile
 
 import boto3
 import botocore.exceptions
@@ -33,6 +36,15 @@ def root_stack_template_path():
 
 def config_stack_template_path():
     return config_file('config_stack.yml')
+
+
+def virtualenv_dir():
+    return os.environ['VIRTUAL_ENV']
+
+
+def virtualenv_site_packages():
+    python_dist = "python{0}.{1}".format(sys.version_info.major, sys.version_info.minor)
+    return os.path.join(virtualenv_dir(), 'lib', python_dist, 'site-packages')
 
 
 CONFIG_STACK_NAME_ = 'scd-config'
@@ -114,6 +126,33 @@ def upload_config_file(s3_client, bucket_name, template_name):
     return response['VersionId']
 
 
+def excluded_by(text, excludes=[]):
+    return any(e for e in excludes if re.search(e, text))
+
+
+def package_add_dir(package, src, excludes=[]):
+    for root, dirs, files in os.walk(src):
+        rel_path = os.path.relpath(root, src)
+        
+        dirs[:] = [d for d in dirs if not excluded_by(d, excludes)]
+        #for d in dirs:
+        #    package.write(os.path.join(rel_path, d))
+        
+        files[:] = [f for f in files if not excluded_by(f, excludes)]
+        for f in files:
+            src_file = os.path.join(root, f)
+            dst_file = os.path.join(rel_path, f)
+            # print(src_file + ' --> ' + dst_file)
+            package.write(src_file, arcname=dst_file)
+
+
+def create_package(src_list, dst, excludes=[]):
+    with zipfile.ZipFile(dst, 'w', compression=zipfile.ZIP_DEFLATED) as package:
+        for src in src_list:
+            print(src)
+            package_add_dir(package, src, excludes)
+
+
 def main():
     cloud_client = boto3.client('cloudformation')
     try:
@@ -133,6 +172,34 @@ def main():
     iam_template_version = upload_config_file(s3_client, bucket_name, 'users_and_roles.yml')
     stellar_api_template_version = upload_config_file(s3_client, bucket_name, 'stellar_api.yml')
     
-    create_change_set(cloud_client, STACK_NAME_)
+    # print("Creating change set")
+    # create_change_set(cloud_client, STACK_NAME_)
+
+    python_srcs = [
+        os.path.join(root_dir(), 'src', 'python'),
+        virtualenv_site_packages()
+    ]
+    python_excludes = [
+        '^awscli',
+        '^docutils',
+        '^python_dateutils',
+        '^boto',
+        '^jmespath',
+        '^setuptools'
+        'dist-info$',
+        '\.pyc$',
+        '^__pycache__$'
+    ]
+
+    package_dst = os.path.join(root_dir(), 'build', 'python_package.zip')
+    create_package(python_srcs, package_dst, python_excludes)
+    
+    print("Uploading package")
+    with open(package_dst, 'rb') as f:
+        lambda_package_resp = s3_client.put_object(
+            Body=f,
+            Bucket=bucket_name,
+            Key='lambda_package.zip'
+        )
 
 main()
