@@ -19,14 +19,17 @@ jobs:
       - pytest src/python
     - stage: Validate yaml
       script:
+      - yaml-lint config/config_stack.yml
+      - yaml-lint config/root_stack.yml
       - yaml-lint config/stellar_stack.yml
+      - yaml-lint config/users_and_roles.yml
+      - aws cloudformation validate-template --template-body file://config/config_stack.yml
+      - aws cloudformation validate-template --template-body file://config/root_stack.yml
       - aws cloudformation validate-template --template-body file://config/stellar_stack.yml
-    - stage: Build package
+      - aws cloudformation validate-template --template-body file://config/users_and_roles.yml
+    - stage: Update stack
       script:
-      - scripts/create_stack_package.sh
-    - stage: Deploy package
-      script:
-      - aws cloudformation deploy --template-file ~/shared/stellar_stack.yml --stack-name scd --capabilities CAPABILITY_IAM
+      - python scripts/setup_stack.py
 after_success:
   - aws s3 sync ~/shared s3://travis-build-stage-shared-storage/shared
 env:
