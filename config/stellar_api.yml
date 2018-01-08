@@ -70,6 +70,7 @@ Resources:
 
     StellarLambdaApi:
         Type: AWS::Lambda::Function
+        DependsOn: StellarLambdaRole
         Properties:
             Code:
                 S3Bucket: !Ref CodeS3BucketName
@@ -94,6 +95,7 @@ Resources:
                 - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
     StellarLambdaRolePermission:
         Type: AWS::Lambda::Permission
+        DependsOn: StellarLambdaApi
         Properties:
             FunctionName: !Ref StellarLambdaApi
             Action: lambda:InvokeFunction

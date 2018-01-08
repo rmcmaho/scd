@@ -4,9 +4,6 @@ Parameters:
         Type: String
         Description: Environment type.
         ConstraintDescription: must specify setup, test, or prod.
-    CodeS3BucketArn:
-        Type: String
-        Description: ARN of S3 bucket to store code.
     ConfigS3BucketArn:
         Type: String
         Description: ARN of S3 bucket to store config.
@@ -21,6 +18,8 @@ Resources:
         Type: "AWS::IAM::Policy"
         Properties:
             PolicyName: "UpdateStellarStack"
+            Users:
+                - TravisCI
             PolicyDocument:
                 Version: "2012-10-17"
                 Statement:
@@ -30,19 +29,19 @@ Resources:
                         - "lambda:GetFunctionConfiguration"
                         - "lambda:UpdateFunctionConfiguration"
                         - "lambda:UpdateFunctionCode"
-                    Resource: !Sub StellarLambdaApiArn
+                    Resource: !Ref StellarLambdaApiArn
                   - Sid: StellarS3
                     Effect: Allow
+                    Action:
                         - "s3:ListBucket"
                         - "s3:ListObjects"
                         - "s3:GetObject"
                     Resource:
-                        - !Ref CodeS3BucketArn
-                        - !Sub "${CodeS3BucketArn}/*"
                         - !Ref ConfigS3BucketArn
                         - !Sub "${ConfigS3BucketArn}/*"
                   - Sid: StellarCloudFormation
                     Effect: Allow
+                    Action:
                         - "cloudformation:CreateChangeSet"
                         - "cloudformation:DescribeChangeSet"
                         - "cloudformation:ValidateTemplate"
@@ -52,10 +51,12 @@ Resources:
                         - !Ref AWS::StackId
                   - Sid: StellarIAM
                     Effect: Allow
+                    Action:
                         - "iam:GetRole"
                     Resource: "*"
                   - Sid: StellarApiGateway
                     Effect: Allow
+                    Action:
                         - "apigateway:PATCH"
                         - "apigateway:POST"
                         - "apigateway:GET"
