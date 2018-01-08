@@ -47,14 +47,16 @@ def virtualenv_site_packages():
     return os.path.join(virtualenv_dir(), 'lib', python_dist, 'site-packages')
 
 
+class EmptyChangeSet(Exception):
+    pass
+
+
 CONFIG_STACK_NAME_ = 'scd-config'
 STACK_NAME_ = 'scd'
-IAM_STACK_ = 'iam-stack'
 
 STACK_TEMPLATE_PATH_ = {
     CONFIG_STACK_NAME_ : config_stack_template_path(),
     STACK_NAME_ : root_stack_template_path(),
-    IAM_STACK_ : config_file('users_and_roles.yml')
 }
 
 
@@ -67,53 +69,45 @@ def dump_cf_response(response):
     return json.dumps(response, indent=2, default=datetime_handler)
 
 
-def create_stack(cloud_client, stack_name):
-    template_path = STACK_TEMPLATE_PATH_[stack_name]
-    with open(template_path, 'r') as f:
-        stack_template = f.read()
+def create_change_set(cloud_client, existing_stacks, stack_name):
+    stack_exists = stack_name in existing_stacks
+    settings = {
+        'StackName' : stack_name,
+        'ChangeSetName' : stack_name+'-CHANGESET',
+        'Capabilities' : ['CAPABILITY_NAMED_IAM'],
+        'ChangeSetType' : 'UPDATE' if stack_exists else 'CREATE'
+    }
 
-    response = cloud_client.create_stack(
-        StackName=stack_name,
-        TemplateBody=stack_template,
-        Capabilities=['CAPABILITY_IAM']
-    )
+    with open(STACK_TEMPLATE_PATH_[stack_name], 'r') as f:
+        settings['TemplateBody'] = f.read()
 
-    stack_id = response['StackId']
+    response = cloud_client.create_change_set(**settings)
+    info = {
+        'Arn' : response['Id'],
+        'StackId' : response['StackId'],
+        'StackName' : stack_name,
+        'Type' : settings['ChangeSetType']
+    }
 
-    while True:
-        time.sleep(1)
-        response = cloud_client.describe_stacks(StackName=stack_id)
-        stack_list = [stack for stack in response['Stacks'] if stack['StackId'] == stack_id]
-        if not stack_list:
-            raise Exception("Unknown stack " + stack_id)
-        
-        stack = stack_list[0]
-        if stack['StackStatus'] == 'CREATE_IN_PROGRESS':
-            print('Create in progress...')
-            continue
-        if stack['StackStatus'] != 'CREATE_COMPLETE':
-            raise Exception(dump_cf_response(response))
-        break
+    waiter = cloud_client.get_waiter('change_set_create_complete')
+    try:
+        waiter.wait(
+            ChangeSetName = info['Arn'],
+            WaiterConfig = {
+                'Delay' : 1,
+                'MaxAttempts' : 120
+            }
+        )
+        return info
+    except botocore.exceptions.WaiterError as e:
+        print('Error while creating change set for ' + stack_name)
 
-    return stack
+    response = cloud_client.describe_change_set(ChangeSetName = info['Arn'])
 
-
-def create_change_set(cloud_client, stack_name, parameters=[]):
-    print('Creating change set for ' + stack_name)
-    template_path = STACK_TEMPLATE_PATH_[stack_name]
-    with open(template_path, 'r') as f:
-        stack_template = f.read()
-
-    response = cloud_client.create_change_set(
-        StackName=stack_name,
-        TemplateBody=stack_template,
-        Capabilities=['CAPABILITY_NAMED_IAM'],
-        ChangeSetName=stack_name+'-CHANGESET',
-        ChangeSetType='CREATE',
-        Parameters=parameters
-    )
-
-    change_set_arn = response['Id']
+    if "didn't contain changes" in response['StatusReason']:
+        raise EmptyChangeSet(info['Arn'])
+    else:
+        raise Exception(response['StatusReason'])
 
 
 def find_in_outputs(stack_desc, key):
@@ -181,19 +175,57 @@ def create_python_lambda_package():
     return package_dst
 
 
-def main():
-    cloud_client = boto3.client('cloudformation')
+def get_existing_stacks(cloud_client):
+    describe_stacks_resp = cloud_client.describe_stacks()
+    existing_stacks = {}
+    for stack_summary in describe_stacks_resp['Stacks']:
+        existing_stacks[stack_summary['StackName']] = stack_summary
+    return existing_stacks
+
+
+def execute_change_set(cloud_client, change_set_info):
+    cloud_client.execute_change_set(
+        ChangeSetName = change_set_info['Arn']
+    )
+
+    if change_set_info['Type'] == 'CREATE':
+        waiter = cloud_client.get_waiter('stack_create_complete')
+    else:
+        waiter = cloud_client.get_waiter('stack_update_complete')
+
     try:
-        response = cloud_client.describe_stacks(StackName=CONFIG_STACK_NAME_)
-        config_desc = next(iter(response['Stacks']), None)
-    except botocore.exceptions.ClientError:
-        config_desc = None
+        waiter.wait(
+            StackName = change_set_info['StackId'],
+            WaiterConfig = {
+                'Delay' : 5,
+                'MaxAttempts' : 300
+            }
+        )
+    except botocore.exceptions.WaiterError as e:
+        raise Exception('Failed to execute change set for stack ' + change_set_info['StackName'])
 
-    if config_desc is None:
-        print('Creating config stack')
-        config_desc = create_stack(cloud_client, CONFIG_STACK_NAME_)
 
-    bucket_name = find_in_outputs(config_desc, 'ConfigS3BucketName')
+def main():
+    # boto3.set_stream_logger(name='botocore')
+    # boto3.set_stream_logger(name='boto3')
+
+    cloud_client = boto3.client('cloudformation')
+    existing_stacks = get_existing_stacks(cloud_client)
+
+    print('Creating config change set')
+    try:
+        config_change_set = create_change_set(cloud_client, existing_stacks, CONFIG_STACK_NAME_)
+    except EmptyChangeSet:
+        config_change_set = None
+
+    if config_change_set:
+        print('Executing config change set ' + config_change_set['Arn'])
+        execute_change_set(cloud_client, config_change_set)
+    else:
+        print('No changes for the config stack')
+
+    existing_stacks = get_existing_stacks(cloud_client)
+    bucket_name = find_in_outputs(existing_stacks[CONFIG_STACK_NAME_], 'ConfigS3BucketName')
 
     s3_client = boto3.client('s3')
     iam_template_version = upload_config_file(s3_client, bucket_name, 'users_and_roles.yml')
@@ -202,6 +234,17 @@ def main():
     python_package = create_python_lambda_package()
     python_package_version = upload_file(s3_client, bucket_name, python_package, 'lambda_package.zip')
 
-    # create_change_set(cloud_client, STACK_NAME_)
+    print('Create stack change set')
+    try:
+        stack_change_set = create_change_set(cloud_client, existing_stacks, STACK_NAME_)
+    except EmptyChangeSet:
+        stack_change_set = None
+
+    if stack_change_set:
+        print('Executing stack change set ' + stack_change_set['Arn'])
+        execute_change_set(cloud_client, stack_change_set)
+    else:
+        print('No changes for the stack')
 
 main()
+
