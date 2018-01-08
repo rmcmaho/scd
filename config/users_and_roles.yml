@@ -30,15 +30,24 @@ Resources:
                         - "lambda:UpdateFunctionConfiguration"
                         - "lambda:UpdateFunctionCode"
                     Resource: !Ref StellarLambdaApiArn
-                  - Sid: StellarS3
+                  - Sid: GeneralS3
                     Effect: Allow
                     Action:
                         - "s3:ListBucket"
                         - "s3:ListObjects"
                         - "s3:GetObject"
+                        - "s3:PutObject"
                     Resource:
                         - !Ref ConfigS3BucketArn
                         - !Sub "${ConfigS3BucketArn}/*"
+                        - arn:aws:s3:::travis-build-stage-shared-storage
+                        - arn:aws:s3:::travis-build-stage-shared-storage/*
+                  - Sid: TravisS3
+                    Effect: Allow
+                    Action:
+                        - "s3:DeleteObject"
+                    Resource:
+                        - arn:aws:s3:::travis-build-stage-shared-storage/shared/*
                   - Sid: StellarCloudFormation
                     Effect: Allow
                     Action:
