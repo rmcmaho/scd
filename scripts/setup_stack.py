@@ -222,6 +222,9 @@ def main():
         config_change_set = create_change_set(cloud_client, existing_stacks, CONFIG_STACK_NAME_)
     except EmptyChangeSet:
         config_change_set = None
+    except botocore.exceptions.ClientError as e:
+        config_change_set = None
+        print("Skipping config update with error " + str(e))
 
     if config_change_set:
         print('Executing config change set ' + config_change_set['Arn'])
