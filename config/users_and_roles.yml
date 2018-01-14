@@ -28,7 +28,7 @@ Resources:
                         - "lambda:GetFunctionConfiguration"
                         - "lambda:UpdateFunctionConfiguration"
                         - "lambda:UpdateFunctionCode"
-                    Resource: !Ref StellarLambdaApiArn
+                    Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:scd-StellarApi-*-StellarLambdaApi-*"
                   - Effect: Allow
                     Action:
                         - "s3:ListBucket"
@@ -68,6 +68,6 @@ Resources:
                         - "apigateway:PATCH"
                         - "apigateway:POST"
                         - "apigateway:GET"
-                    Resource: !Ref StellarHttpApiArn
+                    Resource: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/*"
 
 
