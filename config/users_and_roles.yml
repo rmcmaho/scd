@@ -50,7 +50,7 @@ Resources:
                         - "cloudformation:CreateChangeSet"
                         - "cloudformation:ExecuteChangeSet"
                     Resource:
-                        - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
+                        - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:changeSet/scd-CHANGESET/*"
                   - Effect: Allow
                     Action:
                         - "cloudformation:DescribeChangeSet"
