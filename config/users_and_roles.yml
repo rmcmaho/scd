@@ -48,13 +48,13 @@ Resources:
                   - Effect: Allow
                     Action:
                         - "cloudformation:CreateChangeSet"
-                        - "cloudformation:DescribeStacks"
                         - "cloudformation:ExecuteChangeSet"
                     Resource:
                         - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
                   - Effect: Allow
                     Action:
                         - "cloudformation:DescribeChangeSet"
+                        - "cloudformation:DescribeStacks"
                         - "cloudformation:ValidateTemplate"
                     Resource:
                         - "*"

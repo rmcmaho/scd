@@ -26,6 +26,9 @@ def config_dir():
     return os.path.join(root_dir(), 'config')
 
 
+def build_dir():
+    return os.path.join(root_dir(), 'build')
+
 def config_file(file_name):
     return os.path.join(config_dir(), file_name)
 
@@ -170,7 +173,7 @@ def create_python_lambda_package():
         '^__pycache__$'
     ]
 
-    package_dst = os.path.join(root_dir(), 'build', 'python_package.zip')
+    package_dst = os.path.join(build_dir(), 'python_package.zip')
     create_package(srcs, package_dst, excludes)
     return package_dst
 
@@ -208,6 +211,8 @@ def execute_change_set(cloud_client, change_set_info):
 def main():
     # boto3.set_stream_logger(name='botocore')
     # boto3.set_stream_logger(name='boto3')
+    
+    os.makedirs(build_dir(), exist_ok=True)
 
     cloud_client = boto3.client('cloudformation')
     existing_stacks = get_existing_stacks(cloud_client)
