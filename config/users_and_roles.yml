@@ -25,10 +25,25 @@ Resources:
                 Statement:
                   - Effect: Allow
                     Action:
-                        - "lambda:GetFunctionConfiguration"
-                        - "lambda:UpdateFunctionConfiguration"
-                        - "lambda:UpdateFunctionCode"
-                    Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:scd-StellarApi-*-StellarLambdaApi-*"
+                        - lambda:AddPermission
+                        - lambda:RemovePermission
+                        - lambda:CreateFunction
+                        - lambda:DeleteFunction
+                        - lambda:GetFunction
+                        - lambda:InvokeFunction
+                        - lambda:TagResource
+                        - lambda:UntagResource
+                        - lambda:GetFunctionConfiguration
+                        - lambda:UpdateFunctionConfiguration
+                        - lambda:UpdateFunctionCode
+                    Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:scd-*"
+                  - Effect: Allow
+                    Action:
+                        - lambda:CreateEventSourceMapping
+                        - lambda:DeleteEventSourceMapping
+                        - lambda:GetEventSourceMapping
+                    Resource:
+                        - "*"
                   - Effect: Allow
                     Action:
                         - "s3:ListBucket"
@@ -50,7 +65,7 @@ Resources:
                         - "cloudformation:CreateChangeSet"
                         - "cloudformation:ExecuteChangeSet"
                     Resource:
-                        - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:changeSet/scd-CHANGESET/*"
+                        - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:changeSet/scd*"
                         - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/scd*"
                   - Effect: Allow
                     Action:
@@ -61,13 +76,14 @@ Resources:
                         - "*"
                   - Effect: Allow
                     Action:
-                        - "iam:GetRole"
-                    Resource: "*"
+                        - "apigateway:*"
+                    Resource: !Sub "arn:aws:apigateway:${AWS::Region}::/*"
                   - Effect: Allow
                     Action:
-                        - "apigateway:PATCH"
-                        - "apigateway:POST"
-                        - "apigateway:GET"
-                    Resource: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/*"
+                        - iam:AttachRolePolicy
+                        - iam:DetachRolePolicy
+                        - iam:GetRole
+                        - iam:PassRole
+                    Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/scd-*"
 
 

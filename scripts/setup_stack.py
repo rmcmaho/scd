@@ -60,6 +60,7 @@ STACK_NAME_ = 'scd'
 STACK_TEMPLATE_PATH_ = {
     CONFIG_STACK_NAME_ : config_stack_template_path(),
     STACK_NAME_ : root_stack_template_path(),
+    'scd-stellar-api' : config_file('stellar_api.yml')
 }
 
 
@@ -72,13 +73,14 @@ def dump_cf_response(response):
     return json.dumps(response, indent=2, default=datetime_handler)
 
 
-def create_change_set(cloud_client, existing_stacks, stack_name):
+def create_change_set(cloud_client, existing_stacks, stack_name, parameters=[]):
     stack_exists = stack_name in existing_stacks
     settings = {
         'StackName' : stack_name,
         'ChangeSetName' : stack_name+'-CHANGESET',
         'Capabilities' : ['CAPABILITY_NAMED_IAM'],
-        'ChangeSetType' : 'UPDATE' if stack_exists else 'CREATE'
+        'ChangeSetType' : 'UPDATE' if stack_exists else 'CREATE',
+        'Parameters' : parameters
     }
 
     with open(STACK_TEMPLATE_PATH_[stack_name], 'r') as f:
@@ -207,6 +209,22 @@ def execute_change_set(cloud_client, change_set_info):
     except botocore.exceptions.WaiterError as e:
         raise Exception('Failed to execute change set for stack ' + change_set_info['StackName'])
 
+    print("Stack change set complete")
+
+
+def create_or_update_stack(cloud_client, stack_name, parameters=[]):
+    existing_stacks = get_existing_stacks(cloud_client)
+
+    print('Creating change set for stack ' + stack_name)
+    try:
+        config_change_set = create_change_set(cloud_client, existing_stacks, stack_name, parameters)
+    except EmptyChangeSet:
+        print('No changes for stack ' + stack_name)
+        return
+
+    print('Executing config change set ' + config_change_set['Arn'])
+    execute_change_set(cloud_client, config_change_set)
+
 
 def main():
     # boto3.set_stream_logger(name='botocore')
@@ -215,22 +233,12 @@ def main():
     os.makedirs(build_dir(), exist_ok=True)
 
     cloud_client = boto3.client('cloudformation')
-    existing_stacks = get_existing_stacks(cloud_client)
 
-    print('Creating config change set')
-    try:
-        config_change_set = create_change_set(cloud_client, existing_stacks, CONFIG_STACK_NAME_)
-    except EmptyChangeSet:
-        config_change_set = None
-    except botocore.exceptions.ClientError as e:
-        config_change_set = None
-        print("Skipping config update with error " + str(e))
-
-    if config_change_set:
-        print('Executing config change set ' + config_change_set['Arn'])
-        execute_change_set(cloud_client, config_change_set)
-    else:
-        print('No changes for the config stack')
+    # create_or_update_stack(cloud_client, STACK_NAME_)
+    # create_or_update_stack(cloud_client, 'scd-stellar-api', [{'ParameterKey' : 'CodeS3BucketName', 'ParameterValue' :'scd-config-us-east-1-test'}])
+    # return
+    
+    # create_or_update_stack(cloud_client, CONFIG_STACK_NAME_)
 
     existing_stacks = get_existing_stacks(cloud_client)
     bucket_name = find_in_outputs(existing_stacks[CONFIG_STACK_NAME_], 'ConfigS3BucketName')
@@ -239,20 +247,10 @@ def main():
     iam_template_version = upload_config_file(s3_client, bucket_name, 'users_and_roles.yml')
     stellar_api_template_version = upload_config_file(s3_client, bucket_name, 'stellar_api.yml')
     
-    python_package = create_python_lambda_package()
-    python_package_version = upload_file(s3_client, bucket_name, python_package, 'lambda_package.zip')
-
-    print('Create stack change set')
-    try:
-        stack_change_set = create_change_set(cloud_client, existing_stacks, STACK_NAME_)
-    except EmptyChangeSet:
-        stack_change_set = None
-
-    if stack_change_set:
-        print('Executing stack change set ' + stack_change_set['Arn'])
-        execute_change_set(cloud_client, stack_change_set)
-    else:
-        print('No changes for the stack')
+    # python_package = create_python_lambda_package()
+    # python_package_version = upload_file(s3_client, bucket_name, python_package, 'lambda_package.zip')
+    
+    create_or_update_stack(cloud_client, STACK_NAME_)
 
 main()
 
